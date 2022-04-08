@@ -23,7 +23,6 @@ enum planck_layers {
   _QWERTY,
   _LOWER,
   _RAISE,
-  _ADJUST
 };
 
 enum planck_keycodes {
