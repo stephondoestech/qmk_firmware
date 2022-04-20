@@ -1,5 +1,4 @@
-/* Copyright 2015-2017 Jack Humbert
- * Contributor 2022 Stephon Parker
+/* Copyright 2020 tominabox1
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,21 +13,17 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 #include QMK_KEYBOARD_H
 
-enum planck_layers {
+enum layers {
   _QWERTY,
   _LOWER,
   _RAISE,
   _ADJUST
 };
 
-enum planck_keycodes {
-  QWERTY = SAFE_RANGE,
-  LOWER,
-  RAISE
-};
+#define LOWER MO(_LOWER)
+#define RAISE MO(_RAISE)
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
@@ -86,55 +81,28 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     _______, _______, _______, _______, _______,     _______,      _______, KC_MNXT, KC_VOLD, KC_VOLU, KC_MPLY
   ),
 
-  /* Adjust (Lower + Raise)
-   * ,-----------------------------------------------------------------------------------.
-   * |      |      |      |      |      |      |      |      |      |      |      |  Del |
-   * |------+------+------+------+------+-------------+------+------+------+------+------|
-   * |      |      |      |      |      |AGnorm|AGswap|Qwerty|      |      |      |      |
-   * |------+------+------+------+------+------|------+------+------+------+------+------|
-   * |      |      |      |      |      |      |      |      |      |      |      |      |
-   * |------+------+------+------+------+------+------+------+------+------+------+------|
-   * |      |      |      |      |      |             |      |      |      |      |      |
-   * `-----------------------------------------------------------------------------------'
-   */
-  [_ADJUST] = LAYOUT_planck_mit(
-    _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, KC_DEL ,
-    _______, _______, _______, _______, _______, AG_NORM, AG_SWAP, QWERTY,  _______, _______, _______, _______,
-    _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,
-    _______, _______, _______, _______, _______,     _______,      _______, _______, _______, _______, _______
-  )
+/* Adjust (Lower + Raise)
+ *                      v------------------------RGB CONTROL--------------------v
+ * ,-----------------------------------------------------------------------------------.
+ * |      | Reset|Debug | RGB  |RGBMOD| HUE+ | HUE- | SAT+ | SAT- |BRGTH+|BRGTH-|  Del |
+ * |------+------+------+------+------+------+------+------+------+------+------+------|
+ * |      |      |      |      |      |      |      |      |      |      |      |      |
+ * |------+------+------+------+------+------+------+------+------+------+------+------|
+ * |      |      |      |      |      |      |      |      |      |      |      |      |
+ * |------+------+------+------+------+------+------+------+------+------+------+------|
+ * |      |      |      |      |      |             |      |      |      |      |      |
+ * `-----------------------------------------------------------------------------------'
+ */
+[_ADJUST] = LAYOUT_planck_mit(
+    _______, RESET,   DEBUG,   RGB_TOG, RGB_MOD, RGB_HUI, RGB_HUD, RGB_SAI, RGB_SAD,  RGB_VAI, RGB_VAD, KC_DEL ,
+    _______, _______, _______, _______, _______, _______, _______, _______,  _______,  _______, _______, _______,
+    _______, _______, _______, _______, _______, _______, _______, _______,  _______,  _______, _______, _______,
+    _______, _______, _______, _______, _______, _______, _______, _______,  _______, _______, _______
+)
 
 };
 
-bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-  switch (keycode) {
-    case QWERTY:
-      if (record->event.pressed) {
-        print("mode just switched to qwerty and this is a huge string\n");
-        set_single_persistent_default_layer(_QWERTY);
-      }
-      return false;
-      break;
-    case LOWER:
-      if (record->event.pressed) {
-        layer_on(_LOWER);
-        update_tri_layer(_LOWER, _RAISE, _ADJUST);
-      } else {
-        layer_off(_LOWER);
-        update_tri_layer(_LOWER, _RAISE, _ADJUST);
-      }
-      return false;
-      break;
-    case RAISE:
-      if (record->event.pressed) {
-        layer_on(_RAISE);
-        update_tri_layer(_LOWER, _RAISE, _ADJUST);
-      } else {
-        layer_off(_RAISE);
-        update_tri_layer(_LOWER, _RAISE, _ADJUST);
-      }
-      return false;
-      break;
-  }
-  return true;
+layer_state_t layer_state_set_user(layer_state_t state) {
+  return update_tri_layer_state(state, _LOWER, _RAISE, _ADJUST);
 }
+
